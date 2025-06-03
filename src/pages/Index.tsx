@@ -9,10 +9,14 @@ import { ExperienceForm } from "@/components/resume/ExperienceForm";
 import { SkillsForm } from "@/components/resume/SkillsForm";
 import { ReferencesForm } from "@/components/resume/ReferencesForm";
 import { ResumePreview } from "@/components/resume/ResumePreview";
-import { FileText, Download, User, GraduationCap, Briefcase, Star, Users } from "lucide-react";
+import { TemplateSelector } from "@/components/resume/TemplateSelector";
+import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
+export type ResumeTemplate = "classic" | "modern" | "minimal" | "creative";
+
 export interface ResumeData {
+  template: ResumeTemplate;
   personalInfo: {
     fullName: string;
     email: string;
@@ -60,6 +64,7 @@ export interface ResumeData {
 
 const Index = () => {
   const [resumeData, setResumeData] = useState<ResumeData>({
+    template: "classic",
     personalInfo: {
       fullName: "",
       email: "",
@@ -99,6 +104,7 @@ const Index = () => {
   };
 
   const tabItems = [
+    { id: "template", label: "Template", icon: Palette },
     { id: "personal", label: "Personal Info", icon: User },
     { id: "education", label: "Education", icon: GraduationCap },
     { id: "experience", label: "Experience", icon: Briefcase },
@@ -134,7 +140,7 @@ const Index = () => {
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5 mb-6">
+              <TabsList className="grid w-full grid-cols-6 mb-6">
                 {tabItems.map((item) => (
                   <TabsTrigger 
                     key={item.id} 
@@ -146,6 +152,13 @@ const Index = () => {
                   </TabsTrigger>
                 ))}
               </TabsList>
+
+              <TabsContent value="template" className="space-y-4">
+                <TemplateSelector
+                  selectedTemplate={resumeData.template}
+                  onTemplateChange={(template) => updateResumeData("template", template)}
+                />
+              </TabsContent>
 
               <TabsContent value="personal" className="space-y-4">
                 <PersonalInfoForm
