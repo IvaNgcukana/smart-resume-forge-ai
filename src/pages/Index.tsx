@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,6 +11,8 @@ import { ResumePreview } from "@/components/resume/ResumePreview";
 import { TemplateSelector } from "@/components/resume/TemplateSelector";
 import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 export type ResumeTemplate = "classic" | "modern" | "minimal" | "creative";
 
@@ -94,13 +95,67 @@ const Index = () => {
     }));
   };
 
-  const handleExport = () => {
-    toast({
-      title: "Resume Export",
-      description: "Your resume has been prepared for download!",
-    });
-    // In a real app, this would generate a PDF
-    console.log("Exporting resume:", resumeData);
+  const handleExport = async () => {
+    try {
+      toast({
+        title: "Generating PDF",
+        description: "Please wait while we prepare your resume for download...",
+      });
+
+      // Get the resume preview element
+      const resumeElement = document.querySelector('.resume-preview') as HTMLElement;
+      
+      if (!resumeElement) {
+        toast({
+          title: "Error",
+          description: "Could not find resume preview to export.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create canvas from the resume element
+      const canvas = await html2canvas(resumeElement, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: '#ffffff'
+      });
+
+      // Create PDF
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      
+      // Generate filename
+      const fileName = resumeData.personalInfo.fullName 
+        ? `${resumeData.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`
+        : 'My_Resume.pdf';
+      
+      // Download the PDF
+      pdf.save(fileName);
+
+      toast({
+        title: "Resume Downloaded!",
+        description: `Your resume has been saved as ${fileName}`,
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error generating your PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const tabItems = [

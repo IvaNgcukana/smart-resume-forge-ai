@@ -1,4 +1,3 @@
-
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -61,7 +60,7 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
   const styles = getTemplateStyles();
 
   return (
-    <div className={`max-w-4xl mx-auto text-sm leading-relaxed ${styles.container}`}>
+    <div className={`resume-preview max-w-4xl mx-auto text-sm leading-relaxed ${styles.container}`}>
       {/* Header */}
       <div className={styles.header}>
         <h1 className={styles.name}>
