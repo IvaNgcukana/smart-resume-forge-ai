@@ -170,29 +170,25 @@ export const ResumePreview = ({ data }: ResumePreviewProps) => {
       )}
 
       {/* References */}
-      {(data.references.showMessage || data.references.references.length > 0) && (
+      {data.references.length > 0 && (
         <div className="mb-6">
           <h2 className="text-lg font-bold text-gray-900 mb-3 border-b border-gray-300 pb-1">
             REFERENCES
           </h2>
-          {data.references.showMessage ? (
-            <p className="text-gray-700 text-center py-4">References available upon request</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.references.references.map((ref) => (
-                <div key={ref.id} className="text-sm">
-                  <h3 className="font-semibold text-gray-900">{ref.name}</h3>
-                  <p className="text-gray-700">{ref.title}</p>
-                  <p className="text-gray-700">{ref.company}</p>
-                  <p className="text-gray-600">{ref.relationship}</p>
-                  <div className="text-gray-600 mt-1">
-                    {ref.email && <p>{ref.email}</p>}
-                    {ref.phone && <p>{ref.phone}</p>}
-                  </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {data.references.map((ref) => (
+              <div key={ref.id} className="text-sm">
+                <h3 className="font-semibold text-gray-900">{ref.name}</h3>
+                <p className="text-gray-700">{ref.title}</p>
+                <p className="text-gray-700">{ref.company}</p>
+                <p className="text-gray-600">{ref.relationship}</p>
+                <div className="text-gray-600 mt-1">
+                  {ref.email && <p>{ref.email}</p>}
+                  {ref.phone && <p>{ref.phone}</p>}
                 </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
         </div>
       )}
 

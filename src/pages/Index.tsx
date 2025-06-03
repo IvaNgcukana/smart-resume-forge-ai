@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -46,18 +47,15 @@ export interface ResumeData {
     languages: string[];
     certifications: string[];
   };
-  references: {
-    showMessage: boolean;
-    references: Array<{
-      id: string;
-      name: string;
-      title: string;
-      company: string;
-      email: string;
-      phone: string;
-      relationship: string;
-    }>;
-  };
+  references: Array<{
+    id: string;
+    name: string;
+    title: string;
+    company: string;
+    email: string;
+    phone: string;
+    relationship: string;
+  }>;
 }
 
 const Index = () => {
@@ -79,10 +77,7 @@ const Index = () => {
       languages: [],
       certifications: [],
     },
-    references: {
-      showMessage: false,
-      references: [],
-    },
+    references: [],
   });
 
   const [activeTab, setActiveTab] = useState("personal");
