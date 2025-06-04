@@ -33,10 +33,10 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
         ...data,
         [category]: [...data[category], skill.trim()],
       });
-      setInputValues({
-        ...inputValues,
+      setInputValues(prev => ({
+        ...prev,
         [category]: "",
-      });
+      }));
     }
   };
 
@@ -45,6 +45,13 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
       ...data,
       [category]: data[category].filter((skill) => skill !== skillToRemove),
     });
+  };
+
+  const handleInputChange = (category: keyof Skills, value: string) => {
+    setInputValues(prev => ({
+      ...prev,
+      [category]: value,
+    }));
   };
 
   const handleKeyPress = (category: keyof Skills, e: React.KeyboardEvent) => {
@@ -69,10 +76,7 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
         <div className="flex gap-2">
           <Input
             value={inputValues[category]}
-            onChange={(e) => setInputValues({
-              ...inputValues,
-              [category]: e.target.value,
-            })}
+            onChange={(e) => handleInputChange(category, e.target.value)}
             onKeyPress={(e) => handleKeyPress(category, e)}
             placeholder={placeholder}
             className="flex-1"

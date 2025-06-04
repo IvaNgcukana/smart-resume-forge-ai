@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,10 +9,10 @@ import { SkillsForm } from "@/components/resume/SkillsForm";
 import { ReferencesForm } from "@/components/resume/ReferencesForm";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { TemplateSelector } from "@/components/resume/TemplateSelector";
+import { ExportDialog } from "@/components/resume/ExportDialog";
 import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { useResumeData } from "@/hooks/useResumeData";
 
 export type ResumeTemplate = "classic" | "modern" | "minimal" | "creative";
 
@@ -66,96 +65,11 @@ export interface ResumeData {
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState("personal");
-  const [resumeData, setResumeData] = useState<ResumeData>({
-    template: "classic",
-    personalInfo: {
-      fullName: "",
-      email: "",
-      phone: "",
-      address: "",
-      linkedIn: "",
-      portfolio: "",
-      summary: "",
-    },
-    education: [],
-    experience: [],
-    skills: {
-      technical: [],
-      soft: [],
-      languages: [],
-      certifications: [],
-    },
-    references: [],
-  });
+  const [showExportDialog, setShowExportDialog] = useState(false);
+  const { resumeData, updateResumeData, saveResumeData } = useResumeData();
 
-  const updateResumeData = (section: keyof ResumeData, data: any) => {
-    setResumeData(prev => ({
-      ...prev,
-      [section]: data,
-    }));
-  };
-
-  const handleExport = async () => {
-    try {
-      toast({
-        title: "Generating PDF",
-        description: "Please wait while we prepare your resume for download...",
-      });
-
-      // Get the resume preview element
-      const resumeElement = document.querySelector('.resume-preview') as HTMLElement;
-      
-      if (!resumeElement) {
-        toast({
-          title: "Error",
-          description: "Could not find resume preview to export.",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create canvas from the resume element
-      const canvas = await html2canvas(resumeElement, {
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#ffffff'
-      });
-
-      // Create PDF
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-      const imgX = (pdfWidth - imgWidth * ratio) / 2;
-      const imgY = 0;
-
-      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-      
-      // Generate filename
-      const fileName = resumeData.personalInfo.fullName 
-        ? `${resumeData.personalInfo.fullName.replace(/\s+/g, '_')}_Resume.pdf`
-        : 'My_Resume.pdf';
-      
-      // Download the PDF
-      pdf.save(fileName);
-
-      toast({
-        title: "Resume Downloaded!",
-        description: `Your resume has been saved as ${fileName}`,
-      });
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error generating your PDF. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleExport = () => {
+    setShowExportDialog(true);
   };
 
   const tabItems = [
@@ -263,6 +177,14 @@ const Index = () => {
             </div>
           </Card>
         </div>
+
+        {/* Export Dialog */}
+        <ExportDialog
+          open={showExportDialog}
+          onOpenChange={setShowExportDialog}
+          resumeData={resumeData}
+          onSave={saveResumeData}
+        />
       </div>
     </div>
   );
