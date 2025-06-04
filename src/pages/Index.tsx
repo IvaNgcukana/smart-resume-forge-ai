@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -10,11 +10,8 @@ import { SkillsForm } from "@/components/resume/SkillsForm";
 import { ReferencesForm } from "@/components/resume/ReferencesForm";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { TemplateSelector } from "@/components/resume/TemplateSelector";
-import { AuthForm } from "@/components/auth/AuthForm";
-import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette, LogOut } from "lucide-react";
+import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useResumeData } from "@/hooks/useResumeData";
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
@@ -68,36 +65,34 @@ export interface ResumeData {
 }
 
 const Index = () => {
-  const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("personal");
+  const [resumeData, setResumeData] = useState<ResumeData>({
+    template: "classic",
+    personalInfo: {
+      fullName: "",
+      email: "",
+      phone: "",
+      address: "",
+      linkedIn: "",
+      portfolio: "",
+      summary: "",
+    },
+    education: [],
+    experience: [],
+    skills: {
+      technical: [],
+      soft: [],
+      languages: [],
+      certifications: [],
+    },
+    references: [],
+  });
 
-  const { resumeData, updateResumeData, saveResumeData } = useResumeData(user?.id);
-
-  useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
-      }
-    );
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    toast({
-      title: "Signed out",
-      description: "You have been successfully signed out.",
-    });
+  const updateResumeData = (section: keyof ResumeData, data: any) => {
+    setResumeData(prev => ({
+      ...prev,
+      [section]: data,
+    }));
   };
 
   const handleExport = async () => {
@@ -106,9 +101,6 @@ const Index = () => {
         title: "Generating PDF",
         description: "Please wait while we prepare your resume for download...",
       });
-
-      // Save current data before exporting
-      await saveResumeData(resumeData);
 
       // Get the resume preview element
       const resumeElement = document.querySelector('.resume-preview') as HTMLElement;
@@ -166,21 +158,6 @@ const Index = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <AuthForm onAuthSuccess={() => {}} />;
-  }
-
   const tabItems = [
     { id: "template", label: "Template", icon: Palette },
     { id: "personal", label: "Personal Info", icon: User },
@@ -198,22 +175,10 @@ const Index = () => {
           <div className="flex items-center justify-center gap-3 mb-4">
             <FileText className="h-10 w-10 text-blue-600" />
             <h1 className="text-4xl font-bold text-gray-900">Resume Builder Pro</h1>
-            <Button
-              onClick={handleSignOut}
-              variant="outline"
-              size="sm"
-              className="ml-auto"
-            >
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Create professional, ATS-friendly resumes that get you noticed. 
             Build your resume step by step with our intelligent system.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Signed in as: {user.email}
           </p>
         </div>
 
