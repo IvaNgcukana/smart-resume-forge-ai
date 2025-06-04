@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ResumeData } from "@/pages/Index";
+import { ResumeData, ResumeTemplate } from "@/pages/Index";
 import { toast } from "@/hooks/use-toast";
 
 export const useResumeData = (userId: string | undefined) => {
@@ -54,7 +54,7 @@ export const useResumeData = (userId: string | undefined) => {
       if (data) {
         setResumeId(data.id);
         setResumeData({
-          template: data.template || "classic",
+          template: (data.template as ResumeTemplate) || "classic",
           personalInfo: {
             fullName: data.full_name || "",
             email: data.email || "",
@@ -64,15 +64,15 @@ export const useResumeData = (userId: string | undefined) => {
             portfolio: data.portfolio || "",
             summary: data.summary || "",
           },
-          education: data.education || [],
-          experience: data.experience || [],
-          skills: data.skills || {
+          education: Array.isArray(data.education) ? data.education as any[] : [],
+          experience: Array.isArray(data.experience) ? data.experience as any[] : [],
+          skills: typeof data.skills === 'object' && data.skills !== null ? data.skills as any : {
             technical: [],
             soft: [],
             languages: [],
             certifications: [],
           },
-          references: data.resume_references || [],
+          references: Array.isArray(data.resume_references) ? data.resume_references as any[] : [],
         });
       }
     } catch (error: any) {
