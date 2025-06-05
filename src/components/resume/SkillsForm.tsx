@@ -77,11 +77,12 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
           <Input
             value={inputValues[category]}
             onChange={(e) => handleInputChange(category, e.target.value)}
-            onKeyPress={(e) => handleKeyPress(category, e)}
+            onKeyDown={(e) => handleKeyPress(category, e)}
             placeholder={placeholder}
             className="flex-1"
           />
           <Button
+            type="button"
             onClick={() => addSkill(category, inputValues[category])}
             size="sm"
             className="bg-blue-600 hover:bg-blue-700"
@@ -98,6 +99,7 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
             >
               {skill}
               <button
+                type="button"
                 onClick={() => removeSkill(category, skill)}
                 className="ml-1 text-gray-500 hover:text-red-600"
               >

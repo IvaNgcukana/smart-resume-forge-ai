@@ -9,10 +9,14 @@ import { SkillsForm } from "@/components/resume/SkillsForm";
 import { ReferencesForm } from "@/components/resume/ReferencesForm";
 import { ResumePreview } from "@/components/resume/ResumePreview";
 import { TemplateSelector } from "@/components/resume/TemplateSelector";
-import { ExportDialog } from "@/components/resume/ExportDialog";
+import { ExportOptions } from "@/components/resume/ExportOptions";
+import { SmartSuggestions } from "@/components/resume/SmartSuggestions";
+import { ATSChecker } from "@/components/resume/ATSChecker";
+import { FeedbackSystem } from "@/components/resume/FeedbackSystem";
 import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useResumeData } from "@/hooks/useResumeData";
+import { useFeedbackSystem } from "@/hooks/useFeedbackSystem";
 
 export type ResumeTemplate = "classic" | "modern" | "minimal" | "creative";
 
@@ -67,9 +71,45 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("personal");
   const [showExportDialog, setShowExportDialog] = useState(false);
   const { resumeData, updateResumeData, saveResumeData } = useResumeData();
+  const { submitFeedback, generateImprovedSuggestions } = useFeedbackSystem();
 
   const handleExport = () => {
     setShowExportDialog(true);
+  };
+
+  const handleApplySuggestion = (suggestion: any) => {
+    switch (suggestion.type) {
+      case 'skill':
+        if (suggestion.category && resumeData.skills[suggestion.category as keyof typeof resumeData.skills]) {
+          const currentSkills = resumeData.skills[suggestion.category as keyof typeof resumeData.skills] as string[];
+          updateResumeData('skills', {
+            ...resumeData.skills,
+            [suggestion.category]: [...currentSkills, suggestion.value]
+          });
+        }
+        break;
+      case 'summary':
+        updateResumeData('personalInfo', {
+          ...resumeData.personalInfo,
+          summary: suggestion.value
+        });
+        break;
+      case 'achievement':
+        // Add to the latest experience entry
+        if (resumeData.experience.length > 0) {
+          const updatedExperience = [...resumeData.experience];
+          const latestExp = updatedExperience[0];
+          const newAchievements = suggestion.value.split('\n').filter((a: string) => a.trim());
+          latestExp.achievements = [...latestExp.achievements, ...newAchievements];
+          updateResumeData('experience', updatedExperience);
+        }
+        break;
+    }
+    
+    toast({
+      title: "Suggestion Applied",
+      description: `Added: ${suggestion.title}`,
+    });
   };
 
   const tabItems = [
@@ -91,9 +131,18 @@ const Index = () => {
             <h1 className="text-4xl font-bold text-gray-900">Resume Builder Pro</h1>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Create professional, ATS-friendly resumes that get you noticed. 
+            Create professional, ATS-friendly resumes with AI-powered suggestions. 
             Build your resume step by step with our intelligent system.
           </p>
+        </div>
+
+        {/* AI Assistance Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <SmartSuggestions 
+            resumeData={resumeData} 
+            onApplySuggestion={handleApplySuggestion}
+          />
+          <ATSChecker resumeData={resumeData} />
         </div>
 
         {/* Main Content */}
@@ -104,7 +153,7 @@ const Index = () => {
               <h2 className="text-2xl font-semibold text-gray-900">Build Your Resume</h2>
               <Button onClick={handleExport} className="bg-blue-600 hover:bg-blue-700">
                 <Download className="h-4 w-4 mr-2" />
-                Export PDF
+                Export Resume
               </Button>
             </div>
 
@@ -164,6 +213,11 @@ const Index = () => {
                 />
               </TabsContent>
             </Tabs>
+
+            {/* Feedback System */}
+            <div className="mt-6">
+              <FeedbackSystem onFeedbackSubmit={submitFeedback} />
+            </div>
           </Card>
 
           {/* Preview Section */}
@@ -179,7 +233,7 @@ const Index = () => {
         </div>
 
         {/* Export Dialog */}
-        <ExportDialog
+        <ExportOptions
           open={showExportDialog}
           onOpenChange={setShowExportDialog}
           resumeData={resumeData}
