@@ -54,7 +54,7 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
     }));
   };
 
-  const handleKeyPress = (category: keyof Skills, e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (category: keyof Skills, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       addSkill(category, inputValues[category]);
@@ -75,9 +75,10 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
       <div className="space-y-3">
         <div className="flex gap-2">
           <Input
+            type="text"
             value={inputValues[category]}
             onChange={(e) => handleInputChange(category, e.target.value)}
-            onKeyDown={(e) => handleKeyPress(category, e)}
+            onKeyDown={(e) => handleKeyDown(category, e)}
             placeholder={placeholder}
             className="flex-1"
           />
