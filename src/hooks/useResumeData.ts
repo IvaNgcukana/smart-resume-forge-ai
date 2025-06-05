@@ -36,42 +36,16 @@ export const useResumeData = () => {
 
   const saveResumeData = async (data: ResumeData) => {
     try {
-      // Generate a unique user ID for this session since we don't have auth
-      const sessionUserId = crypto.randomUUID();
+      // For now, we'll store data locally since there's no authentication
+      // This will preserve the data during the session
+      localStorage.setItem('resumeData', JSON.stringify(data));
       
-      const resumeRecord = {
-        user_id: sessionUserId,
-        full_name: data.personalInfo.fullName,
-        email: data.personalInfo.email,
-        phone: data.personalInfo.phone,
-        address: data.personalInfo.address,
-        linkedin: data.personalInfo.linkedIn,
-        portfolio: data.personalInfo.portfolio,
-        summary: data.personalInfo.summary,
-        template: data.template,
-        education: data.education,
-        experience: data.experience,
-        skills: data.skills,
-        resume_references: data.references,
-      };
+      toast({
+        title: "Resume Saved!",
+        description: "Your resume data has been saved locally.",
+      });
 
-      const { error } = await supabase
-        .from('resumes')
-        .insert(resumeRecord);
-
-      if (error) {
-        console.error('Error saving resume:', error);
-        toast({
-          title: "Save Failed",
-          description: "There was an error saving your resume data.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Resume Saved!",
-          description: "Your resume data has been saved successfully.",
-        });
-      }
+      console.log('Resume data saved locally:', data);
     } catch (error) {
       console.error('Error saving resume:', error);
       toast({
@@ -81,6 +55,19 @@ export const useResumeData = () => {
       });
     }
   };
+
+  // Load data from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedData = localStorage.getItem('resumeData');
+      if (savedData) {
+        const parsedData = JSON.parse(savedData);
+        setResumeData(parsedData);
+      }
+    } catch (error) {
+      console.error('Error loading saved resume data:', error);
+    }
+  }, []);
 
   return {
     resumeData,

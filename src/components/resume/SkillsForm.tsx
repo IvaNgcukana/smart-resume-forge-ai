@@ -54,7 +54,7 @@ export const SkillsForm = ({ data, onChange }: SkillsFormProps) => {
     }));
   };
 
-  const handleKeyPress = (category: keyof Skills, e: React.KeyboardEvent) => {
+  const handleKeyPress = (category: keyof Skills, e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
       addSkill(category, inputValues[category]);
