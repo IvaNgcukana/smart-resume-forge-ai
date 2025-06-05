@@ -36,7 +36,11 @@ export const useResumeData = () => {
 
   const saveResumeData = async (data: ResumeData) => {
     try {
+      // Generate a unique user ID for this session since we don't have auth
+      const sessionUserId = crypto.randomUUID();
+      
       const resumeRecord = {
+        user_id: sessionUserId,
         full_name: data.personalInfo.fullName,
         email: data.personalInfo.email,
         phone: data.personalInfo.phone,
