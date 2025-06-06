@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,11 +70,15 @@ export interface ResumeData {
 const Index = () => {
   const [activeTab, setActiveTab] = useState("personal");
   const [showExportDialog, setShowExportDialog] = useState(false);
-  const { resumeData, updateResumeData, saveResumeData } = useResumeData();
+  const { resumeData, updateResumeData, saveResumeData, isLoading } = useResumeData();
   const { submitFeedback, generateImprovedSuggestions } = useFeedbackSystem();
 
   const handleExport = () => {
     setShowExportDialog(true);
+  };
+
+  const handleSaveResume = async () => {
+    await saveResumeData(resumeData);
   };
 
   const handleApplySuggestion = (suggestion: any) => {
@@ -123,17 +126,17 @@ const Index = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <FileText className="h-10 w-10 text-blue-600" />
+            <FileText className="h-10 w-10 text-indigo-600" />
             <h1 className="text-4xl font-bold text-gray-900">Resume Builder Pro</h1>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Create professional, ATS-friendly resumes with AI-powered suggestions. 
-            Build your resume step by step with our intelligent system.
+            Create professional, ATS-friendly resumes with AI-powered industry insights. 
+            Build your resume step by step with intelligent suggestions tailored to your field.
           </p>
         </div>
 
@@ -154,13 +157,18 @@ const Index = () => {
               <h2 className="text-2xl font-semibold text-gray-900">Build Your Resume</h2>
               <div className="flex gap-2">
                 <Button 
-                  onClick={() => saveResumeData(resumeData)} 
+                  onClick={handleSaveResume}
+                  disabled={isLoading}
                   variant="outline"
-                  className="bg-green-600 hover:bg-green-700 text-white"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white disabled:opacity-50"
                 >
-                  Save Resume
+                  {isLoading ? "Saving..." : "Save Resume"}
                 </Button>
-                <Button onClick={handleExport} className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  onClick={handleExport} 
+                  className="bg-indigo-600 hover:bg-indigo-700"
+                  disabled={!resumeData.personalInfo.fullName}
+                >
                   <Download className="h-4 w-4 mr-2" />
                   Export Resume
                 </Button>
@@ -234,9 +242,9 @@ const Index = () => {
           <Card className="p-6 shadow-lg">
             <div className="mb-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-2">Live Preview</h2>
-              <p className="text-gray-600">See how your resume looks in real-time</p>
+              <p className="text-gray-600">See how your professional resume looks in real-time</p>
             </div>
-            <div className="border rounded-lg bg-white shadow-sm">
+            <div className="border rounded-lg bg-white shadow-sm overflow-hidden">
               <ResumePreview data={resumeData} />
             </div>
           </Card>

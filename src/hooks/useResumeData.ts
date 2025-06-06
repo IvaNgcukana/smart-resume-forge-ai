@@ -27,6 +27,8 @@ export const useResumeData = () => {
     references: [],
   });
 
+  const [isLoading, setIsLoading] = useState(false);
+
   const updateResumeData = (section: keyof ResumeData, data: any) => {
     setResumeData(prev => ({
       ...prev,
@@ -35,67 +37,89 @@ export const useResumeData = () => {
   };
 
   const saveResumeData = async (data: ResumeData) => {
+    if (!data.personalInfo.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to save your resume.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
     try {
       const resumeRecord = {
-        user_id: null, // No user authentication needed
+        user_id: null,
         template: data.template,
-        full_name: data.personalInfo.fullName,
+        full_name: data.personalInfo.fullName || null,
         email: data.personalInfo.email,
-        phone: data.personalInfo.phone,
-        address: data.personalInfo.address,
-        linkedin: data.personalInfo.linkedIn,
-        portfolio: data.personalInfo.portfolio,
-        summary: data.personalInfo.summary,
+        phone: data.personalInfo.phone || null,
+        address: data.personalInfo.address || null,
+        linkedin: data.personalInfo.linkedIn || null,
+        portfolio: data.personalInfo.portfolio || null,
+        summary: data.personalInfo.summary || null,
         education: data.education,
         experience: data.experience,
         skills: data.skills,
         resume_references: data.references,
       };
 
-      // Check if we have a resume with this email (simple identification)
-      const { data: existingResume } = await supabase
+      // Check if we have a resume with this email
+      const { data: existingResume, error: fetchError } = await supabase
         .from('resumes')
         .select('id')
         .eq('email', data.personalInfo.email)
         .maybeSingle();
 
+      if (fetchError) {
+        console.error('Error fetching existing resume:', fetchError);
+        throw fetchError;
+      }
+
       if (existingResume) {
         // Update existing resume
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from('resumes')
           .update(resumeRecord)
           .eq('id', existingResume.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
+        
+        toast({
+          title: "Resume Updated!",
+          description: "Your resume has been successfully updated.",
+        });
       } else {
         // Insert new resume
-        const { error } = await supabase
+        const { error: insertError } = await supabase
           .from('resumes')
           .insert([resumeRecord]);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
+        
+        toast({
+          title: "Resume Created!",
+          description: "Your resume has been successfully saved.",
+        });
       }
-
-      toast({
-        title: "Resume Saved!",
-        description: "Your resume data has been saved to the database.",
-      });
 
       console.log('Resume data saved to Supabase:', data);
     } catch (error) {
       console.error('Error saving resume:', error);
       toast({
         title: "Save Failed",
-        description: "There was an error saving your resume data.",
+        description: "There was an error saving your resume data. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   // Load data from Supabase based on email when it's provided
   useEffect(() => {
     const loadResumeData = async () => {
-      if (!resumeData.personalInfo.email) return;
+      if (!resumeData.personalInfo.email || resumeData.personalInfo.email.length < 5) return;
 
       try {
         const { data: resume, error } = await supabase
@@ -104,13 +128,14 @@ export const useResumeData = () => {
           .eq('email', resumeData.personalInfo.email)
           .maybeSingle();
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
-          throw error;
+        if (error && error.code !== 'PGRST116') {
+          console.error('Error loading resume data:', error);
+          return;
         }
 
         if (resume) {
           setResumeData({
-            template: resume.template as any,
+            template: (resume.template as ResumeData['template']) || "classic",
             personalInfo: {
               fullName: resume.full_name || "",
               email: resume.email || "",
@@ -120,17 +145,22 @@ export const useResumeData = () => {
               portfolio: resume.portfolio || "",
               summary: resume.summary || "",
             },
-            education: Array.isArray(resume.education) ? resume.education as any[] : [],
-            experience: Array.isArray(resume.experience) ? resume.experience as any[] : [],
+            education: Array.isArray(resume.education) ? resume.education as ResumeData['education'] : [],
+            experience: Array.isArray(resume.experience) ? resume.experience as ResumeData['experience'] : [],
             skills: (resume.skills && typeof resume.skills === 'object' && !Array.isArray(resume.skills)) 
-              ? resume.skills as any 
+              ? resume.skills as ResumeData['skills']
               : {
                   technical: [],
                   soft: [],
                   languages: [],
                   certifications: [],
                 },
-            references: Array.isArray(resume.resume_references) ? resume.resume_references as any[] : [],
+            references: Array.isArray(resume.resume_references) ? resume.resume_references as ResumeData['references'] : [],
+          });
+          
+          toast({
+            title: "Resume Loaded",
+            description: "Your existing resume data has been loaded.",
           });
         }
       } catch (error) {
@@ -138,8 +168,7 @@ export const useResumeData = () => {
       }
     };
 
-    // Debounce the load function to avoid too many API calls
-    const timeoutId = setTimeout(loadResumeData, 1000);
+    const timeoutId = setTimeout(loadResumeData, 1500);
     return () => clearTimeout(timeoutId);
   }, [resumeData.personalInfo.email]);
 
@@ -147,5 +176,6 @@ export const useResumeData = () => {
     resumeData,
     updateResumeData,
     saveResumeData,
+    isLoading,
   };
 };
