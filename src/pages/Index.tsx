@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,10 +14,12 @@ import { ExportOptions } from "@/components/resume/ExportOptions";
 import { SmartSuggestions } from "@/components/resume/SmartSuggestions";
 import { ATSChecker } from "@/components/resume/ATSChecker";
 import { FeedbackSystem } from "@/components/resume/FeedbackSystem";
+import { AuthForm } from "@/components/auth/AuthForm";
 import { FileText, Download, User, GraduationCap, Briefcase, Star, Users, Palette } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useResumeData } from "@/hooks/useResumeData";
 import { useFeedbackSystem } from "@/hooks/useFeedbackSystem";
+import { useAuth } from "@/hooks/useAuth";
 
 export type ResumeTemplate = "classic" | "modern" | "minimal" | "creative";
 
@@ -72,6 +75,7 @@ const Index = () => {
   const [showExportDialog, setShowExportDialog] = useState(false);
   const { resumeData, updateResumeData, saveResumeData } = useResumeData();
   const { submitFeedback, generateImprovedSuggestions } = useFeedbackSystem();
+  const { user, loading, signOut } = useAuth();
 
   const handleExport = () => {
     setShowExportDialog(true);
@@ -121,14 +125,34 @@ const Index = () => {
     { id: "references", label: "References", icon: Users },
   ];
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <AuthForm />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <FileText className="h-10 w-10 text-blue-600" />
-            <h1 className="text-4xl font-bold text-gray-900">Resume Builder Pro</h1>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <FileText className="h-10 w-10 text-blue-600" />
+              <h1 className="text-4xl font-bold text-gray-900">Resume Builder Pro</h1>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="text-sm text-gray-600">Welcome, {user.email}</span>
+              <Button onClick={signOut} variant="outline" size="sm">
+                Sign Out
+              </Button>
+            </div>
           </div>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             Create professional, ATS-friendly resumes with AI-powered suggestions. 
@@ -151,10 +175,19 @@ const Index = () => {
           <Card className="p-6 shadow-lg">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-semibold text-gray-900">Build Your Resume</h2>
-              <Button onClick={handleExport} className="bg-blue-600 hover:bg-blue-700">
-                <Download className="h-4 w-4 mr-2" />
-                Export Resume
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => saveResumeData(resumeData)} 
+                  variant="outline"
+                  className="bg-green-600 hover:bg-green-700 text-white"
+                >
+                  Save Resume
+                </Button>
+                <Button onClick={handleExport} className="bg-blue-600 hover:bg-blue-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Resume
+                </Button>
+              </div>
             </div>
 
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
