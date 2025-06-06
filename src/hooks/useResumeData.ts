@@ -3,10 +3,8 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ResumeData } from "@/pages/Index";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/hooks/useAuth";
 
 export const useResumeData = () => {
-  const { user } = useAuth();
   const [resumeData, setResumeData] = useState<ResumeData>({
     template: "classic",
     personalInfo: {
@@ -37,18 +35,9 @@ export const useResumeData = () => {
   };
 
   const saveResumeData = async (data: ResumeData) => {
-    if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please sign in to save your resume data.",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
       const resumeRecord = {
-        user_id: user.id,
+        user_id: null, // No user authentication needed
         template: data.template,
         full_name: data.personalInfo.fullName,
         email: data.personalInfo.email,
@@ -63,12 +52,12 @@ export const useResumeData = () => {
         resume_references: data.references,
       };
 
-      // Try to update existing resume first
+      // Check if we have a resume with this email (simple identification)
       const { data: existingResume } = await supabase
         .from('resumes')
         .select('id')
-        .eq('user_id', user.id)
-        .single();
+        .eq('email', data.personalInfo.email)
+        .maybeSingle();
 
       if (existingResume) {
         // Update existing resume
@@ -103,17 +92,17 @@ export const useResumeData = () => {
     }
   };
 
-  // Load data from Supabase when user is authenticated
+  // Load data from Supabase based on email when it's provided
   useEffect(() => {
     const loadResumeData = async () => {
-      if (!user) return;
+      if (!resumeData.personalInfo.email) return;
 
       try {
         const { data: resume, error } = await supabase
           .from('resumes')
           .select('*')
-          .eq('user_id', user.id)
-          .single();
+          .eq('email', resumeData.personalInfo.email)
+          .maybeSingle();
 
         if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
           throw error;
@@ -149,8 +138,10 @@ export const useResumeData = () => {
       }
     };
 
-    loadResumeData();
-  }, [user]);
+    // Debounce the load function to avoid too many API calls
+    const timeoutId = setTimeout(loadResumeData, 1000);
+    return () => clearTimeout(timeoutId);
+  }, [resumeData.personalInfo.email]);
 
   return {
     resumeData,
