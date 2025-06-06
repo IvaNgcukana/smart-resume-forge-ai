@@ -131,15 +131,17 @@ export const useResumeData = () => {
               portfolio: resume.portfolio || "",
               summary: resume.summary || "",
             },
-            education: resume.education || [],
-            experience: resume.experience || [],
-            skills: resume.skills || {
-              technical: [],
-              soft: [],
-              languages: [],
-              certifications: [],
-            },
-            references: resume.resume_references || [],
+            education: Array.isArray(resume.education) ? resume.education as any[] : [],
+            experience: Array.isArray(resume.experience) ? resume.experience as any[] : [],
+            skills: (resume.skills && typeof resume.skills === 'object' && !Array.isArray(resume.skills)) 
+              ? resume.skills as any 
+              : {
+                  technical: [],
+                  soft: [],
+                  languages: [],
+                  certifications: [],
+                },
+            references: Array.isArray(resume.resume_references) ? resume.resume_references as any[] : [],
           });
         }
       } catch (error) {
